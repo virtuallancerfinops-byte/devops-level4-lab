@@ -47,7 +47,7 @@ jobs:
           tags: nginx-proxy:ci-test
 
       - name: Trivy Vulnerability Scan - Nginx Container
-        uses: aquasecurity/trivy-action@0.29.0
+        uses: aquasecurity/trivy-action@v0.29.0
         with:
           image-ref: 'nginx-proxy:ci-test'
           format: 'table'
