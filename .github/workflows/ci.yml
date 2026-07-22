@@ -1,0 +1,85 @@
+name: CI/CD Pipeline & Security Scan
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  security-and-build:
+    name: DevSecOps Gate & Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # -------------------------------------------------------------
+      # 1. BUILD & SCAN APP CONTAINER
+      # -------------------------------------------------------------
+      - name: Build Web App Image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./web
+          load: true
+          tags: node-web-app:ci-test
+
+      - name: Trivy Vulnerability Scan - App Container
+        uses: aquasecurity/trivy-action@0.29.0
+        with:
+          image-ref: 'node-web-app:ci-test'
+          format: 'table'
+          exit-code: '0' # Keep 0 for now so pipeline doesn't fail on legacy image vulnerabilities
+          severity: 'CRITICAL,HIGH'
+
+      # -------------------------------------------------------------
+      # 2. BUILD & SCAN NGINX CONTAINER
+      # -------------------------------------------------------------
+      - name: Build Nginx Image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./nginx
+          load: true
+          tags: nginx-proxy:ci-test
+
+      - name: Trivy Vulnerability Scan - Nginx Container
+        uses: aquasecurity/trivy-action@0.29.0
+        with:
+          image-ref: 'nginx-proxy:ci-test'
+          format: 'table'
+          exit-code: '0'
+          severity: 'CRITICAL,HIGH'
+
+      # -------------------------------------------------------------
+      # 3. VERIFY COMPOSE STACK PARSING
+      # -------------------------------------------------------------
+      - name: Validate Docker Compose Config
+        run: docker compose config
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
